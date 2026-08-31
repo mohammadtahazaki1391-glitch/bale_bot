@@ -1,0 +1,3 @@
+bale
+python-dotenv
+flask
