@@ -5,7 +5,6 @@ app = Flask(__name__)
 
 COUNTRIES = ["ایران", "آمریکا", "روسیه", "انگلستان", "آلمان", "فرانسه"]
 
-# وضعیت اولیه کشورها (بعداً با دیتابیس تغییر می‌کنه)
 STATUS = {
     "ایران": {"gold": 1000000, "oil": 500, "army": 1000},
     "آمریکا": {"gold": 2000000, "oil": 800, "army": 2000},
@@ -36,7 +35,6 @@ DEFENSES = {
     "توپ ضد هوایی": {"dollar": 150000, "defense": 500},
 }
 
-# صفحه انتخاب کشور
 @app.route('/')
 def home():
     html = """
@@ -69,7 +67,6 @@ def home():
     """
     return render_template_string(html, countries=COUNTRIES)
 
-# منوی اصلی (پنجره چهارتایی)
 @app.route('/dashboard/<country>')
 def dashboard(country):
     html = """
@@ -100,7 +97,6 @@ def dashboard(country):
     """
     return render_template_string(html, country=country)
 
-# وضعیت کشور
 @app.route('/status/<country>')
 def status(country):
     data = STATUS.get(country, {})
@@ -129,7 +125,6 @@ def status(country):
     """
     return render_template_string(html, country=country, data=data)
 
-# فروشگاه
 @app.route('/shop/<country>')
 def shop(country):
     html = """
@@ -168,11 +163,10 @@ def shop(country):
     """
     return render_template_string(html, country=country, items=ITEMS)
 
-# پدافند
 @app.route('/defense/<country>')
-def defense(country):html = """
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
+def defense(country):
+    html = """
+    <!DOCTYPE html><html lang="fa" dir="rtl">
     <head>
         <meta charset="UTF-8">
         <title>پدافند {{ country }}</title>
@@ -181,7 +175,6 @@ def defense(country):html = """
             .box { background: white; border-radius: 10px; padding: 20px; max-width: 500px; margin: 20px auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
             ul { list-style: none; padding: 0; }
             li { background: #e0e0e0; margin: 10px; padding: 15px; border-radius: 5px; }
-            a { text-decoration: none; color: #333; font-weight: bold; display: block; }
             .back { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
         </style>
     </head>
@@ -200,10 +193,9 @@ def defense(country):html = """
     """
     return render_template_string(html, country=country, defenses=DEFENSES)
 
-# صفحه جنگ (فعلاً ساده)
 @app.route('/war/<country>')
 def war(country):
-    return f"<h1>جنگ {country}</h1><p>برای پیاده‌سازی جنگ آنلاین و محاصره دریایی، به پایگاه داده نیاز داریم. این بخش بعداً تکمیل می‌شود.</p><a href='/dashboard/{country}'>بازگشت</a>"
+    return f"<h1>جنگ {country}</h1><p>بخش جنگ به زودی تکمیل می‌شود.</p><a href='/dashboard/{country}'>بازگشت</a>"
 
 port = int(os.environ.get('PORT', 10000))
 app.run(host='0.0.0.0', port=port)
