@@ -5,28 +5,21 @@ app = Flask(__name__)
 
 COUNTRIES = ["ایران", "آمریکا", "روسیه", "انگلستان", "آلمان", "فرانسه"]
 
-# تقسیم بندی تجهیزات به سه نیرو
 ITEMS = {
-    # نیروی زمینی
     "پیاده نظام": {"dollar": 50000, "oil": 5, "elec": 10, "ammo": 20, "damage": 150, "defense": 100, "type": "ground"},
     "تانک": {"dollar": 120000, "oil": 20, "elec": 15, "ammo": 50, "damage": 400, "defense": 600, "type": "ground"},
     "موشک انداز": {"dollar": 180000, "oil": 15, "elec": 30, "ammo": 60, "damage": 700, "defense": 150, "type": "ground"},
     "زره پوش": {"dollar": 90000, "oil": 15, "elec": 10, "ammo": 35, "damage": 250, "defense": 400, "type": "ground"},
-    
-    # نیروی هوایی
     "هلیکوپتر تهاجمی": {"dollar": 150000, "oil": 25, "elec": 20, "ammo": 40, "damage": 350, "defense": 250, "type": "air"},
     "جنگنده": {"dollar": 250000, "oil": 35, "elec": 40, "ammo": 30, "damage": 600, "defense": 400, "type": "air"},
     "بمب افکن": {"dollar": 350000, "oil": 50, "elec": 50, "ammo": 20, "damage": 1000, "defense": 300, "type": "air"},
     "پهپاد": {"dollar": 80000, "oil": 10, "elec": 30, "ammo": 15, "damage": 200, "defense": 80, "type": "air"},
-
-    # نیروی دریایی
     "قایق تندرو": {"dollar": 70000, "oil": 20, "elec": 10, "ammo": 25, "damage": 200, "defense": 150, "type": "navy"},
     "ناوشکن": {"dollar": 220000, "oil": 40, "elec": 30, "ammo": 55, "damage": 500, "defense": 550, "type": "navy"},
     "زیردریایی": {"dollar": 320000, "oil": 30, "elec": 45, "ammo": 40, "damage": 800, "defense": 350, "type": "navy"},
     "ناو هواپیمابر": {"dollar": 500000, "oil": 80, "elec": 100, "ammo": 25, "damage": 1500, "defense": 900, "type": "navy"},
 }
 
-# صفحه اصلی
 @app.route('/')
 def home():
     html = """
@@ -47,7 +40,6 @@ def home():
     </head>
     <body>
         <h1>به جنگ جهانی خوش آمدید!</h1>
-        
         <div class="cat-box">
             <h2>کشورها</h2>
             <ul>
@@ -56,7 +48,6 @@ def home():
                 {% endfor %}
             </ul>
         </div>
-
         <div class="cat-box">
             <h2>نیروی زمینی</h2>
             <ul>
@@ -65,7 +56,6 @@ def home():
                 {% endfor %}
             </ul>
         </div>
-
         <div class="cat-box">
             <h2>نیروی هوایی</h2>
             <ul>
@@ -74,7 +64,6 @@ def home():
                 {% endfor %}
             </ul>
         </div>
-
         <div class="cat-box">
             <h2>نیروی دریایی</h2>
             <ul>
@@ -88,16 +77,15 @@ def home():
     """
     return render_template_string(html, countries=COUNTRIES, items=ITEMS)
 
-# صفحه جزئیات هر آیتم
 @app.route('/buy/<item_name>')
-def buy_item(item_name):item = ITEMS.get(item_name)
+def buy_item(item_name):
+    item = ITEMS.get(item_name)
     if not item:
         return "آیتم پیدا نشد!", 404
     
     html = """
     <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
+    <html lang="fa" dir="rtl"><head>
         <meta charset="UTF-8">
         <title>خرید {{ item_name }}</title>
         <style>
