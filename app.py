@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request, redirect, make_response
 
 app = Flask(__name__)
 
@@ -17,185 +17,107 @@ STATUS = {
 ITEMS = {
     "پیاده نظام": {"dollar": 50000, "oil": 5, "elec": 10, "ammo": 20, "damage": 150, "defense": 100, "type": "ground"},
     "تانک": {"dollar": 120000, "oil": 20, "elec": 15, "ammo": 50, "damage": 400, "defense": 600, "type": "ground"},
-    "موشک انداز": {"dollar": 180000, "oil": 15, "elec": 30, "ammo": 60, "damage": 700, "defense": 150, "type": "ground"},
-    "زره پوش": {"dollar": 90000, "oil": 15, "elec": 10, "ammo": 35, "damage": 250, "defense": 400, "type": "ground"},
     "هلیکوپتر تهاجمی": {"dollar": 150000, "oil": 25, "elec": 20, "ammo": 40, "damage": 350, "defense": 250, "type": "air"},
     "جنگنده": {"dollar": 250000, "oil": 35, "elec": 40, "ammo": 30, "damage": 600, "defense": 400, "type": "air"},
-    "بمب افکن": {"dollar": 350000, "oil": 50, "elec": 50, "ammo": 20, "damage": 1000, "defense": 300, "type": "air"},
-    "پهپاد": {"dollar": 80000, "oil": 10, "elec": 30, "ammo": 15, "damage": 200, "defense": 80, "type": "air"},
     "قایق تندرو": {"dollar": 70000, "oil": 20, "elec": 10, "ammo": 25, "damage": 200, "defense": 150, "type": "navy"},
     "ناوشکن": {"dollar": 220000, "oil": 40, "elec": 30, "ammo": 55, "damage": 500, "defense": 550, "type": "navy"},
-    "زیردریایی": {"dollar": 320000, "oil": 30, "elec": 45, "ammo": 40, "damage": 800, "defense": 350, "type": "navy"},
-    "ناو هواپیمابر": {"dollar": 500000, "oil": 80, "elec": 100, "ammo": 25, "damage": 1500, "defense": 900, "type": "navy"},
-}
-
-DEFENSES = {
-    "سامانه پدافند هوایی": {"dollar": 400000, "defense": 1200},
-    "موشک ضد هوایی": {"dollar": 250000, "defense": 800},
-    "توپ ضد هوایی": {"dollar": 150000, "defense": 500},
 }
 
 @app.route('/')
 def home():
+    selected = request.cookies.get('country')
+    if selected in COUNTRIES:
+        return redirect(f'/dashboard/{selected}')
+    
     html = """
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>جنگ جهانی</title>
-        <style>
-            body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; text-align: center; padding: 50px; }
-            h1 { color: #333; }
-            .box { background: white; border-radius: 10px; padding: 20px; margin: 20px auto; max-width: 600px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            ul { list-style: none; padding: 0; }
-            li { margin: 10px; padding: 15px; border-radius: 5px; background: #e0e0e0; }
-            a { text-decoration: none; color: #333; font-weight: bold; display: block; }
-        </style>
-    </head>
-    <body>
-        <h1>به جنگ جهانی خوش آمدید!</h1>
-        <h2>یک کشور انتخاب کنید:</h2>
-        <div class="box">
-            <ul>
-                {% for country in countries %}
-                    <li><a href="/dashboard/{{ country }}">{{ country }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-    </body>
-    </html>
+    <div style="font-family:Tahoma;text-align:center;padding:50px">
+        <h1>جنگ جهانی</h1>
+        <h3>یک کشور انتخاب کنید</h3>
+        <ul style="list-style:none;padding:0">
+        {% for country in countries %}
+            <li style="margin:10px"><a href="/set_country/{{ country }}" style="background:#e0e0e0;padding:15px;display:block;border-radius:5px;text-decoration:none;color:#333">{{ country }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
     """
     return render_template_string(html, countries=COUNTRIES)
+
+@app.route('/set_country/<country>')
+def set_country(country):
+    resp = make_response(redirect(f'/dashboard/{country}'))
+    resp.set_cookie('country', country)
+    return resp
 
 @app.route('/dashboard/<country>')
 def dashboard(country):
     html = """
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>منوی اصلی {{ country }}</title>
-        <style>
-            body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; text-align: center; padding: 50px; }
-            h1 { color: #333; }
-            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 600px; margin: 20px auto; }.card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; text-decoration: none; color: #333; font-weight: bold; font-size: 18px; }
-            .card:hover { background: #f0f0f0; }
-            .back { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
-        </style>
-    </head>
-    <body>
+    <div style="font-family:Tahoma;text-align:center;padding:20px">
         <h1>منوی فرماندهی {{ country }}</h1>
-        <div class="grid">
-            <a href="/status/{{ country }}" class="card">📊 وضعیت کشور</a>
-            <a href="/shop/{{ country }}" class="card">🛒 خرید تجهیزات</a>
-            <a href="/defense/{{ country }}" class="card">🛡️ پدافند</a>
-            <a href="/war/{{ country }}" class="card">⚔️ جنگ و درگیری</a>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:600px;margin:auto">
+            <a href="/status/{{ country }}" style="background:white;padding:30px;border-radius:10px;text-decoration:none;color:#333;font-size:20px">📊 وضعیت</a>
+            <a href="/shop/{{ country }}" style="background:white;padding:30px;border-radius:10px;text-decoration:none;color:#333;font-size:20px">🛒 خرید</a>
+            <a href="/defense/{{ country }}" style="background:white;padding:30px;border-radius:10px;text-decoration:none;color:#333;font-size:20px">🛡️ پدافند</a>
+            <a href="/war/{{ country }}" style="background:white;padding:30px;border-radius:10px;text-decoration:none;color:#333;font-size:20px">⚔️ جنگ</a>
         </div>
-        <a href="/" class="back">بازگشت به انتخاب کشور</a>
-    </body>
-    </html>
+        <a href="/reset" style="display:block;margin-top:30px;color:red">تغییر کشور</a>
+    </div>
     """
     return render_template_string(html, country=country)
 
 @app.route('/status/<country>')
 def status(country):
     data = STATUS.get(country, {})
-    html = """
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>وضعیت {{ country }}</title>
-        <style>
-            body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; text-align: center; padding: 50px; }
-            .box { background: white; border-radius: 10px; padding: 30px; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            .back { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
-        </style>
-    </head>
-    <body>
-        <div class="box">
-            <h1>وضعیت {{ country }}</h1>
-            <p>💰 طلا: {{ data.gold }}</p>
-            <p>🛢️ نفت: {{ data.oil }}</p>
-            <p>🪖 ارتش: {{ data.army }}</p>
-        </div>
-        <a href="/dashboard/{{ country }}" class="back">بازگشت به منو</a>
-    </body>
-    </html>
-    """
-    return render_template_string(html, country=country, data=data)
+    return f"<div style='font-family:Tahoma;text-align:center;padding:50px'><h1>وضعیت {country}</h1><p>💰 طلا: {data['gold']}</p><p>🛢 نفت: {data['oil']}</p><p>🪖 ارتش: {data['army']}</p><br><a href='/dashboard/{country}'>بازگشت به منو</a></div>"
 
 @app.route('/shop/<country>')
 def shop(country):
     html = """
-    <!DOCTYPE html>
-    <html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>فروشگاه {{ country }}</title>
-        <style>
-            body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; text-align: center; padding: 50px; }
-            .cat-box { background: white; border-radius: 10px; padding: 20px; margin: 20px auto; max-width: 700px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            h2 { color: #0056b3; }
-            ul { list-style: none; padding: 0; }
-            li { background: #e0e0e0; margin: 10px; padding: 15px; border-radius: 5px; }
-            a { text-decoration: none; color: #333; font-weight: bold; display: block; }
-            .back { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
-        </style>
-    </head>
-    <body>
+    <div style="font-family:Tahoma;text-align:center;padding:20px">
         <h1>فروشگاه {{ country }}</h1>
-        <div class="cat-box">
-            <h2>نیروی زمینی</h2>
-            <ul>{% for name, item in items.items() if item.type == 'ground' %}<li><a href="#">{{ name }}</a></li>{% endfor %}</ul>
+        <div style="max-width:600px;margin:auto">{% for name, item in items.items() %}
+            <div style="background:white;margin:10px;padding:15px;border-radius:5px">
+                <h3>{{ name }}</h3>
+                <p>قیمت: {{ item.dollar }} دلار | خسارت: {{ item.damage }} | دفاع: {{ item.defense }}</p>
+                <a href="/buy/{{ country }}/{{ name }}">خرید</a>
+            </div>
+        {% endfor %}
         </div>
-        <div class="cat-box">
-            <h2>نیروی هوایی</h2>
-            <ul>{% for name, item in items.items() if item.type == 'air' %}<li><a href="#">{{ name }}</a></li>{% endfor %}</ul>
-        </div>
-        <div class="cat-box">
-            <h2>نیروی دریایی</h2>
-            <ul>{% for name, item in items.items() if item.type == 'navy' %}<li><a href="#">{{ name }}</a></li>{% endfor %}</ul>
-        </div>
-        <a href="/dashboard/{{ country }}" class="back">بازگشت به منو</a>
-    </body>
-    </html>
+        <a href="/dashboard/{{ country }}">بازگشت</a>
+    </div>
     """
     return render_template_string(html, country=country, items=ITEMS)
 
+@app.route('/buy/<country>/<item>')
+def buy(country, item):
+    if country not in STATUS: return "کشور نامعتبر"
+    item_data = ITEMS.get(item)
+    if not item_data: return "آیتم نامعتبر"
+    
+    price = item_data['dollar']
+    oil_needed = item_data['oil']
+    
+    if STATUS[country]['gold'] < price or STATUS[country]['oil'] < oil_needed:
+        return f"<h3>منابع کافی نیست! طلا و نفت بیشتری لازم داری.</h3><a href='/shop/{country}'>بازگشت</a>"
+    
+    STATUS[country]['gold'] -= price
+    STATUS[country]['oil'] -= oil_needed
+    STATUS[country]['army'] += 10
+    
+    return f"<div style='font-family:Tahoma;text-align:center;padding:50px'><h2>✅ خرید موفق!</h2><p>شما {item} را خریدید.</p><p>موجودی طلا: {STATUS[country]['gold']}</p><a href='/dashboard/{country}'>بازگشت به منو</a></div>"
+
 @app.route('/defense/<country>')
 def defense(country):
-    html = """
-    <!DOCTYPE html><html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <title>پدافند {{ country }}</title>
-        <style>
-            body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; text-align: center; padding: 50px; }
-            .box { background: white; border-radius: 10px; padding: 20px; max-width: 500px; margin: 20px auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-            ul { list-style: none; padding: 0; }
-            li { background: #e0e0e0; margin: 10px; padding: 15px; border-radius: 5px; }
-            .back { display: block; margin-top: 20px; color: #007bff; text-decoration: none; }
-        </style>
-    </head>
-    <body>
-        <h1>پدافند {{ country }}</h1>
-        <div class="box">
-            <ul>
-                {% for name, defense in defenses.items() %}
-                    <li>{{ name }} (دفاع: {{ defense.defense }})</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <a href="/dashboard/{{ country }}" class="back">بازگشت به منو</a>
-    </body>
-    </html>
-    """
-    return render_template_string(html, country=country, defenses=DEFENSES)
+    return f"<div style='font-family:Tahoma;text-align:center;padding:50px'><h1>پدافند {country}</h1><p>سیستم پدافندی فعال است.</p><a href='/dashboard/{country}'>بازگشت</a></div>"
 
 @app.route('/war/<country>')
 def war(country):
-    return f"<h1>جنگ {country}</h1><p>بخش جنگ به زودی تکمیل می‌شود.</p><a href='/dashboard/{country}'>بازگشت</a>"
+    return f"<div style='font-family:Tahoma;text-align:center;padding:50px'><h1>جنگ {country}</h1><p>برای جنگ آنلاین بین چند کشور، نیاز به دیتابیس داریم که در مرحله بعد اضافه می‌شود.</p><a href='/dashboard/{country}'>بازگشت</a></div>"
+
+@app.route('/reset')
+def reset():
+    resp = make_response(redirect('/'))
+    resp.delete_cookie('country')
+    return resp
 
 port = int(os.environ.get('PORT', 10000))
 app.run(host='0.0.0.0', port=port)
