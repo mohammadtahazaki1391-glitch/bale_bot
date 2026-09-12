@@ -1,3 +1,4 @@
+flask
+requests
 python-bale-bot
 python-dotenv
-flask
